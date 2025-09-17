@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package aktorski_framework;
+option go_package = "/messages";
+
+message Envelope {
+  bytes binary_message = 1;
+  string sender_id = 2;
+  string sender_address = 3;
+}
+
+message RemoteEnvelope {
+  string recipient_id = 1;
+  Envelope envelope = 2;
+}
+
+service ActorService {
+  rpc SendMessage(RemoteEnvelope) returns (Empty);
+}
+
+message Empty {}
