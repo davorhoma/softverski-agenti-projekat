@@ -17,6 +17,10 @@ func (c *Context) Sender() *PID {
 	return c.sender
 }
 
+func (c *Context) Parent() *PID {
+	return c.self.Parent
+}
+
 func (c *Context) Send(to *PID, msg Message) {
 	if to == nil {
 		fmt.Println("[WARN] Send: target PID is nil")

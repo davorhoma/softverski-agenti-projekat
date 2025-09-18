@@ -17,6 +17,7 @@ type remoteClient struct {
 
 type ActorSystem struct {
 	actors        map[string]*PID
+	actorTypes    map[string]Actor
 	mu            sync.RWMutex
 	remoteClients map[string]*remoteClient
 	remoteMu      sync.RWMutex
@@ -26,6 +27,7 @@ type ActorSystem struct {
 func NewActorSystem(address string) *ActorSystem {
 	return &ActorSystem{
 		actors:        make(map[string]*PID),
+		actorTypes:    make(map[string]Actor),
 		localAddress:  address,
 		remoteClients: make(map[string]*remoteClient),
 	}
@@ -44,12 +46,16 @@ func (s *ActorSystem) GetPID(id string) (*PID, bool) {
 	return pid, ok
 }
 
-func (s *ActorSystem) Spawn(id string, actor Actor) *PID {
+func (s *ActorSystem) Spawn(id string, parent *PID, actor Actor) *PID {
 	inbox := make(chan Envelope, 100)
 	pid := &PID{
 		ID:      id,
 		Address: s.localAddress,
-		Inbox:   inbox}
+		Inbox:   inbox,
+		Parent:  parent,
+	}
+
+	s.actorTypes[id] = actor
 
 	s.RegisterActor(pid)
 
@@ -58,6 +64,19 @@ func (s *ActorSystem) Spawn(id string, actor Actor) *PID {
 	}
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Actor %s panicked: %v\n", pid.ID, r)
+				// Obaveštavanje roditelja o panic-u
+				if pid.Parent != nil {
+					s.Send(pid.Parent.ID, FailureMessage{
+						FailedPID: pid,
+						Reason:    fmt.Sprintf("%v", r),
+					})
+				}
+			}
+		}()
+
 		for env := range inbox {
 			ctx := &Context{
 				self:   pid,
