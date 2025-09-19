@@ -56,7 +56,6 @@ func (s *ActorSystem) Spawn(id string, parent *PID, actor Actor) *PID {
 	}
 
 	s.actorTypes[id] = actor
-
 	s.RegisterActor(pid)
 
 	if ps, ok := actor.(PreStart); ok {
@@ -76,6 +75,16 @@ func (s *ActorSystem) Spawn(id string, parent *PID, actor Actor) *PID {
 				}
 			}
 		}()
+
+		if pr, ok := actor.(PreRecover); ok {
+			ctx := &Context{
+				self:   pid,
+				System: s,
+				sender: nil,
+			}
+			
+			pr.Recover(ctx)
+		}
 
 		for env := range inbox {
 			ctx := &Context{

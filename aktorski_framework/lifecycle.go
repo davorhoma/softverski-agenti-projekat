@@ -15,3 +15,7 @@ type PostStop interface {
 type Restart interface {
 	Restart(err error)
 }
+
+type PreRecover interface {
+	Recover(ctx *Context)
+}
