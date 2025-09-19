@@ -82,7 +82,7 @@ func (s *ActorSystem) Spawn(id string, parent *PID, actor Actor) *PID {
 				System: s,
 				sender: nil,
 			}
-			
+
 			pr.Recover(ctx)
 		}
 
@@ -93,12 +93,7 @@ func (s *ActorSystem) Spawn(id string, parent *PID, actor Actor) *PID {
 				sender: env.Sender,
 			}
 
-			behavior := ctx.CurrentBehaviour()
-			if behavior != nil {
-				behavior(ctx, env.Msg)
-			} else {
-				actor.Receive(ctx, env.Msg)
-			}
+			actor.Receive(ctx, env.Msg)
 		}
 
 		if ps, ok := actor.(PostStop); ok {
@@ -177,8 +172,6 @@ func (s *ActorSystem) remoteSend(recipientPID *PID, envelope Envelope) error {
 		remoteEnv.Envelope.SenderAddress = envelope.Sender.Address
 	}
 
-	fmt.Println("Hello", remoteEnv)
-
 	_, err = client.client.SendMessage(context.Background(), remoteEnv)
 	if err != nil {
 		return fmt.Errorf("remote send failed: %v", err)
@@ -188,15 +181,44 @@ func (s *ActorSystem) remoteSend(recipientPID *PID, envelope Envelope) error {
 }
 
 func serializeMessage(msg Message) ([]byte, error) {
-	return json.Marshal(msg)
+	messageType := fmt.Sprintf("%T", msg)
+	envelopeData := map[string]interface{}{
+		"type": messageType,
+		"data": msg,
+	}
+	return json.Marshal(envelopeData)
 }
 
 func deserializeMessage(data []byte) (Message, error) {
-	var m map[string]interface{}
-	err := json.Unmarshal(data, &m)
-	if err != nil {
+	var envelopeData map[string]json.RawMessage
+	if err := json.Unmarshal(data, &envelopeData); err != nil {
 		return nil, err
 	}
 
-	return m, nil
+	var msgType string
+	if err := json.Unmarshal(envelopeData["type"], &msgType); err != nil {
+		return nil, err
+	}
+
+	var msg Message
+	switch msgType {
+	case "*aktorski_framework.TrainModelMessage", "aktorski_framework.TrainModelMessage":
+		m := &TrainModelMessage{}
+		if err := json.Unmarshal(envelopeData["data"], m); err != nil {
+			return nil, err
+		}
+		msg = m
+
+	case "*aktorski_framework.ModelUpdateMessage", "aktorski_framework.ModelUpdateMessage":
+		m := &ModelUpdateMessage{}
+		if err := json.Unmarshal(envelopeData["data"], m); err != nil {
+			return nil, err
+		}
+		msg = m
+
+	default:
+		return nil, fmt.Errorf("unknown message type: %s", msgType)
+	}
+
+	return msg, nil
 }

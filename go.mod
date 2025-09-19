@@ -8,7 +8,8 @@ require (
 )
 
 require (
-	go.etcd.io/bbolt v1.4.3 // indirect
+	github.com/cdipaolo/goml v0.0.0-20220715001353-00e0c845ae1c
+	go.etcd.io/bbolt v1.4.3
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect

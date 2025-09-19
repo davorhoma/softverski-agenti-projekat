@@ -23,3 +23,9 @@ type StateLoadedMessage struct {
 	Key   string
 	State []byte
 }
+
+type TrainModelMessage struct{}
+type ModelUpdateMessage struct {
+	SenderID string
+	Params   []float64
+}

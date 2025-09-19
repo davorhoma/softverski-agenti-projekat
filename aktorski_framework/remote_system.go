@@ -29,6 +29,8 @@ func (s *remoteActorServiceServer) SendMessage(ctx context.Context, in *pb.Remot
 		return nil, fmt.Errorf("failed to deserialize message: %v", err)
 	}
 
+	// fmt.Println("Deserialized message", msg)
+
 	senderPID := &PID{
 		ID:      envelopeProto.GetSenderId(),
 		Address: envelopeProto.GetSenderAddress(),

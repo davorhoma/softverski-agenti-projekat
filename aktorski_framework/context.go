@@ -3,10 +3,10 @@ package aktorski_framework
 import "fmt"
 
 type Context struct {
-	self           *PID
-	sender         *PID
-	behaviourStack []Behaviour
-	System         *ActorSystem
+	self   *PID
+	sender *PID
+	System *ActorSystem
+	actor  Actor
 }
 
 func (c *Context) Self() *PID {
@@ -80,26 +80,5 @@ func (c *Context) Request(to *PID, msg Message) {
 func (c *Context) Reply(msg Message) {
 	if c.Sender() != nil {
 		c.Send(c.Sender(), msg)
-	}
-}
-
-func (c *Context) Become(b Behaviour, discardOld bool) {
-	if discardOld {
-		c.behaviourStack = []Behaviour{b}
-	} else {
-		c.behaviourStack = append(c.behaviourStack, b)
-	}
-}
-
-func (c *Context) CurrentBehaviour() Behaviour {
-	if len(c.behaviourStack) == 0 {
-		return nil
-	}
-	return c.behaviourStack[len(c.behaviourStack)-1]
-}
-
-func (c *Context) Unbecome() {
-	if len(c.behaviourStack) > 0 {
-		c.behaviourStack = c.behaviourStack[:len(c.behaviourStack)-1]
 	}
 }
