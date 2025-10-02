@@ -107,7 +107,7 @@ func (a *TrainingActor) trainingBehaviour(ctx *akt.Context, msg akt.Message) {
 			Key:   fmt.Sprintf("%s_model_params", a.bolnicaID),
 			State: a.modelParams,
 		}
-		ctx.Send(a.persistencePID, &saveMsg)
+		ctx.Send(a.persistencePID, saveMsg)
 
 		// Evaluacija
 		rez, _ := utils.EvaluateHeartDiseaseLogisticRegression(a.testFilePath, a.modelParams)
